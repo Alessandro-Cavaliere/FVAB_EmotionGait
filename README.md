@@ -96,7 +96,7 @@ python test_validation_model.py
 or
 
 (if you want to use your videos folder by path and your xlsx file by path)
-python test_validation_model.py --file /path/to/your/file.xlsx
+python test_validation_model.py --file /path/to/your/file.xlsx --video-folder /path/to/your/videoFolder
 ```
 
 Once this is done, the `.h5` file of the model just trained by the configuration in the file described above will be displayed.
