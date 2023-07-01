@@ -9,7 +9,11 @@ from sklearn.preprocessing import LabelEncoder
 from keras.models import load_model
 from sklearn.metrics import classification_report, confusion_matrix
 
-
+"""
+    Funzione **calcola_media_colonne** per calcolare la media delle colonne in un file Excel.
+    Prende in input il percorso del file Excel.
+    Restituisce una lista di tuple, ognuna contenente il nome del video e l'etichetta corrispondente.
+"""
 def calcola_media_colonne(file_excel):
     wb = openpyxl.load_workbook(file_excel)
     foglio = wb.worksheets[0]
@@ -58,25 +62,11 @@ def calcola_media_colonne(file_excel):
                 ultimo_nome_video = nome_video
     return risultato
 
-
-file_excel = 'datasets_xlsx/responses_test.xlsx'
-risultato = calcola_media_colonne(file_excel)
-file_csv = './dativideoTest.csv'
-
-with open(file_csv, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['Nome Video', 'Emozione'])
-    for nome_video, etichetta in risultato:
-        if nome_video.startswith("VID_RGB_000"):
-            nome_video = nome_video.replace("VID_RGB_000", "").strip()
-        writer.writerow([nome_video, etichetta])
-        print("Nome video:", nome_video)
-        print("Emozione:", etichetta)
-        print()
-
-print("Dati salvati correttamente nel file CSV:", file_csv)
-
-
+"""
+    Funzione **apply_landmarks** per applicare i landmarks a un frame.
+    Prende in input il frame, l'oggetto mediapipe, la larghezza e l'altezza desiderate.
+    Restituisce il frame con i landmarks applicati.
+"""
 def apply_landmarks(frame, mp_holistic, target_width, target_height):
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     frame_rgb = cv2.GaussianBlur(frame_rgb, (5, 5), 0)
@@ -91,7 +81,11 @@ def apply_landmarks(frame, mp_holistic, target_width, target_height):
 
     return frame_with_landmarks
 
-
+"""
+    Funzione **process_video_folder** per processare una cartella di video.
+    Prende in input il percorso della cartella di input, il percorso della cartella di output, la larghezza e l'altezza desiderate.
+    Restituisce una lista di tuple, ognuna contenente il nome del video e la lista dei frame con i landmarks applicati.
+"""
 def process_video_folder(input_folder, output_folder, target_width, target_height):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -145,9 +139,11 @@ def process_video_folder(input_folder, output_folder, target_width, target_heigh
 
     return processed_videos
 
-
-# ...
-
+"""
+    Funzione **test_lstm** per testare un modello LSTM su un set di dati.
+    Prende in input il percorso del file CSV e una lista di nomi di cartelle.
+    Non restituisce nulla, ma stampa l'accuratezza del modello sul set di test e le metriche di classificazione.
+"""
 def test_lstm(file_csv, nomi_cartelle):
     df = pd.read_csv(file_csv)
     emotions = {'-Happy': 0, '-Sad': 1, '-Angry': 2, '-Neutral': 3}
@@ -203,7 +199,11 @@ def test_lstm(file_csv, nomi_cartelle):
     # Print confusion matrix
     print(confusion_matrix(y, y_pred_classes))
 
-
+"""
+    Funzione **get_folder_names** per ottenere i nomi delle sottocartelle in una cartella.
+    Prende in input il percorso della cartella.
+    Restituisce una lista di nomi di sottocartelle.
+"""
 def get_folder_names(output_folder):
     if os.path.isdir(output_folder):
         nomi_cartelle = [nome for nome in os.listdir(output_folder) if os.path.isdir(os.path.join(output_folder, nome))]
@@ -211,7 +211,6 @@ def get_folder_names(output_folder):
     else:
         print('Il percorso specificato non corrisponde a una cartella.')
         return []
-
 
 # Esempio di utilizzo della funzione test_lstm()
 input_folder = './videosTest'

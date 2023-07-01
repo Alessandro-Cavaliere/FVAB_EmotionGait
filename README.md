@@ -82,7 +82,7 @@ This project is a starting point for emotion recognition using LSTM networks. Fu
 
 ## Setup and Usage
 
-To train the model, upload videos of people walking inside the root directory with name :"videos" for model training (file : `test_validation_model.py`)
+To train the model, we need to use videos of people walking and a file .xlsx (dataset). This is necessary for model training.
 
 Run the command to install the dependencies:
 ```
