@@ -319,7 +319,7 @@ def main():
     # Controllo se è stata fornita una cartella dei video diversa tramite l'argomento --video-folder
     if args.video_folder:
         input_folder = args.video_folder
-    else:
+    elif os.path.exists("./videos"):
         print("\nStai per utilizzare il percorso di default per la cartella dei video: './videos'")
         print("Vuoi continuare? [y/n]")
         response = input()
@@ -327,7 +327,15 @@ def main():
             print("\nPer specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
             print("      \033[91mpython\033[0m test_validation_model.py \033[91m--video-folder\033[0m /percorso/del/tuo/file.xlsx\n")
             exit()
-        input_folder = './videos'
+        else:
+            input_folder = './videos'
+            print("Continuazione dello script in corso...")
+    else:
+        print("\nÈ necessario specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
+        print("      \033[91mpython\033[0m test_validation_model.py \033[91m--video-folder\033[0m /percorso/del/tuo/file.xlsx\n")
+        print("Oppure importa una cartella 'videos' con all'interno i video di tuo interesse nella workspace corrente.")
+        exit()
+
 
     file_csv = './dativideo.csv'
     with open(file_csv, 'w', newline='') as csvfile:
@@ -349,9 +357,6 @@ def main():
     target_height = 320
     file_csv = './dativideo.csv'
 
-    if os.path.exists("./videos"):
-        print("\nTi ricordo che hai scelto di utilizzare il path di default dei video, assicurati che i video siano quelli corretti che vuoi utilizzare.")
-
     if os.path.exists("./outputframe") | os.path.exists("./logs") | os.path.exists("emotion_lstm_model.h5"):
         print("\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
         print("Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframe\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
@@ -370,7 +375,7 @@ def main():
             if os.path.exists("emotion_lstm_model.h5"):
                 os.remove('emotion_lstm_model.h5')
             print("\nCancellazione dei file avvenuta con successo.")
-            print("Esecuzione dello script in corso...")
+            print("Esecuzione dello script in corso...\n\n")
 
     processed_videos = process_video_folder(input_folder, output_folder, target_width, target_height)
     nomi_cartelle = get_folder_names(output_folder)
