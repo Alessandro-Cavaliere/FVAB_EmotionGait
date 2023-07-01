@@ -218,11 +218,30 @@ def main():
     # Crea un parser per gli argomenti da riga di comando
     parser = argparse.ArgumentParser(
         description='Parser per definire gli argomenti da riga di comando (il file .xlsx e la cartella dei video).')
+    parser.add_argument('--file', type=str, help='Il percorso del file Excel da processare.')
     parser.add_argument('--video-folder', type=str, help='La cartella contenente i video da elaborare.')
     parser.add_argument('--model', type=str, help='Modello da voler testare.')
 
     # Analizza gli argomenti da riga di comando
     args = parser.parse_args()
+
+    # Se l'utente ha fornito un percorso di file, usalo. Altrimenti, usa il percorso di default.
+    if args.file:
+        file_excel = args.file
+    else:
+        print(
+            "\nStai per utilizzare il percorso di default per il file Excel: 'datasets_xlsx/responses_test.xlsx'")
+        print("Vuoi continuare? [y/n]")
+        response = input()
+        if response.lower() != 'y':
+            print(
+                "\nPer specificare un percorso di file diverso, esegui lo script con l'opzione \033[91m--file\033[0m, come segue:")
+            print(
+                "      \033[91mpython\033[0m test_model.py \033[91m--file\033[0m /percorso/del/tuo/file.xlsx\n")
+            exit()
+        file_excel = 'datasets_xlsx/responses_test.xlsx'
+
+    risultato = calcola_media_colonne(file_excel)
 
     # Controllo se è stata fornita una cartella dei video per il test diversa tramite l'argomento --video-folder
     if args.video_folder:
@@ -267,10 +286,21 @@ def main():
         print("Oppure importa un modello con nome 'emotion_lstm_model.h5' nella workspace corrente.")
         exit()
 
+    file_csv = './dativideoTest.csv'
+    with open(file_csv, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Nome Video', 'Emozione'])
+        for nome_video, etichetta in risultato:
+            if nome_video.startswith("VID_RGB_000"):
+                nome_video = nome_video.replace("VID_RGB_000", "").strip()
+            writer.writerow([nome_video, etichetta])
+            print("Nome video:", nome_video)
+            print("Emozione:", etichetta)
+            print()
+
     output_folder = './outputframeTest'
     target_width = 180
     target_height = 320
-    file_csv = './dativideoTest.csv'
 
     if os.path.exists("./outputframeTest") | os.path.exists("emotion_lstm_model.h5"):
         print("\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")

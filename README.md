@@ -101,7 +101,7 @@ python test_validation_model.py --file /path/to/your/file.xlsx --video-folder /p
 
 Once this is done, the `.h5` file of the model just trained by the configuration in the file described above will be displayed.
 
-Instead, to test the newly trained model, upload videos or people walking inside the root directory (as for training) with name :" videosTest "
+Instead, to test the newly trained model, Unlike the training file, for which we needed two files, to test , we will also need a pre-trained model to run our test code on.
 
 Run the command to install the dependencies if you haven't already:
 ```
@@ -109,7 +109,13 @@ pip install -r requirements.txt
 ```
 Then simply run the reference python file for testing the model:
 ```
-python test_model.py
+(if you want to import in the workspace videos folder, xlsx file and model.h5)
+python test_validation_model.py  
+
+or
+
+(if you want to use your videos folder by path, your xlsx file by path and your model.h5 by path)
+python test_validation_model.py --file /path/to/your/file.xlsx --video-folder /path/to/your/videoFolder --model /path/to/your/model
 ```
 Once this is done, the data and statistics of accuracy, precision and the various details of the case will be displayed on the console.
 

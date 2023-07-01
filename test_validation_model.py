@@ -358,7 +358,6 @@ def main():
     output_folder = './outputframe'
     target_width = 180
     target_height = 320
-    file_csv = './dativideo.csv'
 
     if os.path.exists("./outputframe") | os.path.exists("./logs") | os.path.exists("emotion_lstm_model.h5"):
         print(
