@@ -90,9 +90,13 @@ pip install -r requirements.txt
 ```
 Then simply run the python reference file for model training and follow the instructions given in the console:
 ```
-python test_validation_model.py
+(if you want to import in the workspace videos folder and xlsx file)
+python test_validation_model.py  
+
 or
-test_validation_model.py --file /path/to/your/file.xlsx
+
+(if you want to use your videos folder by path and your xlsx file by path)
+python test_validation_model.py --file /path/to/your/file.xlsx
 ```
 
 Once this is done, the `.h5` file of the model just trained by the configuration in the file described above will be displayed.
