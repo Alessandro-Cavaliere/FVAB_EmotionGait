@@ -63,10 +63,10 @@ The model architecture is as follows:
 - `TimeDistributed Conv2D` layer with 32 filters and a 3x3 kernel, followed by a ReLU activation function.
 - `TimeDistributed MaxPooling2D` layer with a 2x2 pool size.
 - `TimeDistributed Flatten` layer to flatten the 3D outputs of the previous layer for the LSTM. LSTM layer with 32 units.
-- `Dense layer` with 64 units, a ReLU activation function, and L2 regularization.
+- `Dense layer` with 32 units, a ReLU activation function, and L2 regularization.
 - `Output Dense layer` with a softmax activation function.
 
-The model uses the `Adam` optimizer with a learning rate of 0.00007 and sparse categorical crossentropy as the loss function.
+The model uses the `Adam` optimizer with a learning rate of 0.00002 and sparse categorical crossentropy as the loss function.
 
 ## Results
 
@@ -88,14 +88,16 @@ Run the command to install the dependencies:
 ```
 pip install -r requirements.txt
 ```
-Then simply run the python reference file for model training:
+Then simply run the python reference file for model training and follow the instructions given in the console:
 ```
 python test_validation_model.py
+or
+test_validation_model.py --file /path/to/your/file.xlsx
 ```
 
 Once this is done, the `.h5` file of the model just trained by the configuration in the file described above will be displayed.
 
-Instead, to test the newly trained model, upload videos or people walking inside the root directory (as for training) with name :" videosTest"
+Instead, to test the newly trained model, upload videos or people walking inside the root directory (as for training) with name :" videosTest "
 
 Run the command to install the dependencies if you haven't already:
 ```
