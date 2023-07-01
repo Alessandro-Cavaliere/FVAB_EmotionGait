@@ -1,4 +1,3 @@
-csv
 opencv-python
 openpyxl
 numpy
