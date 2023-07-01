@@ -293,6 +293,7 @@ def main():
     # Crea un parser per gli argomenti da riga di comando
     parser = argparse.ArgumentParser(description='Processa un file Excel per calcolare la media delle colonne.')
     parser.add_argument('--file', type=str, help='Il percorso del file Excel da processare.')
+    parser.add_argument('--video-folder', type=str, help='La cartella contenente i video da elaborare.')
 
     # Analizza gli argomenti da riga di comando
     args = parser.parse_args()
@@ -315,6 +316,19 @@ def main():
 
     risultato = calcola_media_colonne(file_excel)
 
+    # Controllo se è stata fornita una cartella dei video diversa tramite l'argomento --video-folder
+    if args.video_folder:
+        input_folder = args.video_folder
+    else:
+        print("\nStai per utilizzare il percorso di default per la cartella dei video: './videos'")
+        print("Vuoi continuare? [y/n]")
+        response = input()
+        if response.lower() != 'y':
+            print("\nPer specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
+            print("      \033[91mpython\033[0m test_validation_model.py \033[91m--video-folder\033[0m /percorso/del/tuo/file.xlsx\n")
+            exit()
+        input_folder = './videos'
+
     file_csv = './dativideo.csv'
     with open(file_csv, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -330,17 +344,17 @@ def main():
     print("Dati salvati correttamente nel file CSV:", file_csv)
 
     # Esempio di utilizzo della funzione train_lstm()
-    input_folder = './videos'
     output_folder = './outputframe'
     target_width = 180
     target_height = 320
     file_csv = './dativideo.csv'
 
+    if os.path.exists("./videos"):
+        print("\nTi ricordo che hai scelto di utilizzare il path di default dei video, assicurati che i video siano quelli corretti che vuoi utilizzare.")
+
     if os.path.exists("./outputframe") | os.path.exists("./logs") | os.path.exists("emotion_lstm_model.h5"):
-        print(
-            "\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
-        print(
-            "Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframe\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
+        print("\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
+        print("Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframe\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
         print("Procedo alla cancellazione? [y/n]")
         response = input()
         if response.lower() != 'y':
