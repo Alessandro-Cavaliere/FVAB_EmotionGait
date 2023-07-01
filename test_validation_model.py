@@ -74,42 +74,6 @@ def calcola_media_colonne(file_excel):
     return risultato
 
 
-# Crea un parser per gli argomenti da riga di comando
-parser = argparse.ArgumentParser(description='Processa un file Excel per calcolare la media delle colonne.')
-parser.add_argument('--file', type=str, help='Il percorso del file Excel da processare.')
-
-# Analizza gli argomenti da riga di comando
-args = parser.parse_args()
-
-# Se l'utente ha fornito un percorso di file, usalo. Altrimenti, usa il percorso di default.
-if args.file:
-    file_excel = args.file
-else:
-    print("\nStai per utilizzare il percorso di default per il file Excel: 'datasets_xlsx/Responses_train+validation.xlsx'")
-    print("Vuoi continuare? [y/n]")
-    response = input()
-    if response.lower() != 'y':
-        print("\nPer specificare un percorso di file diverso, esegui lo script con l'opzione \033[91m--file\033[0m, come segue:")
-        print("      \033[91mpython\033[0m test_validation_model.py \033[91m--file\033[0m /percorso/del/tuo/file.xlsx\n")
-        exit()
-    file_excel = 'datasets_xlsx/Responses_train+validation.xlsx'
-
-risultato = calcola_media_colonne(file_excel)
-
-file_csv = './dativideo.csv'
-with open(file_csv, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['Nome Video', 'Emozione'])
-    for nome_video, etichetta in risultato:
-        if nome_video.startswith("VID_RGB_000"):
-            nome_video = nome_video.replace("VID_RGB_000", "").strip()
-        writer.writerow([nome_video, etichetta])
-        print("Nome video:", nome_video)
-        print("Emozione:", etichetta)
-        print()
-
-print("Dati salvati correttamente nel file CSV:", file_csv)
-
 """
    Funzione **apply_landmarks** per applicare i landmarks a un frame.
    Prende in input il frame, l'oggetto mediapipe, la larghezza e l'altezza desiderate.
@@ -325,33 +289,79 @@ def get_folder_names(output_folder):
         return []
 
 
-# Esempio di utilizzo della funzione train_lstm()
-input_folder = './videos'
-output_folder = './outputframe'
-target_width = 180
-target_height = 320
-file_csv = './dativideo.csv'
+def main():
+    # Crea un parser per gli argomenti da riga di comando
+    parser = argparse.ArgumentParser(description='Processa un file Excel per calcolare la media delle colonne.')
+    parser.add_argument('--file', type=str, help='Il percorso del file Excel da processare.')
 
-if os.path.exists("./outputframe") | os.path.exists("./logs") | os.path.exists("emotion_lstm_model.h5"):
-    print("\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
-    print("Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframe\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
-    print("Procedo alla cancellazione? [y/n]")
-    response = input()
-    if response.lower() != 'y':
-        print("\nÈ necessario che questi file vengano spostati da questa workspace per il corretto funzionamento.")
-        print("Riavvia lo script una volta che questi file siano stati spostati (o cancellati) correttamente.")
-        exit()
+    # Analizza gli argomenti da riga di comando
+    args = parser.parse_args()
+
+    # Se l'utente ha fornito un percorso di file, usalo. Altrimenti, usa il percorso di default.
+    if args.file:
+        file_excel = args.file
     else:
-        # Cancella la cartella 'outputframe' e tutto il suo contenuto nel caso siano rimasti rimasugli da vecchie esecuzioni
-        if os.path.exists("./outputframe"):
-            shutil.rmtree('./outputframe')
-        if os.path.exists("./logs"):
-            shutil.rmtree('./logs')
-        if os.path.exists("emotion_lstm_model.h5"):
-            os.remove('emotion_lstm_model.h5')
-        print("\nCancellazione dei file avvenuta con successo.")
-        print("Esecuzione dello script in corso...")
+        print(
+            "\nStai per utilizzare il percorso di default per il file Excel: 'datasets_xlsx/Responses_train+validation.xlsx'")
+        print("Vuoi continuare? [y/n]")
+        response = input()
+        if response.lower() != 'y':
+            print(
+                "\nPer specificare un percorso di file diverso, esegui lo script con l'opzione \033[91m--file\033[0m, come segue:")
+            print(
+                "      \033[91mpython\033[0m test_validation_model.py \033[91m--file\033[0m /percorso/del/tuo/file.xlsx\n")
+            exit()
+        file_excel = 'datasets_xlsx/Responses_train+validation.xlsx'
 
-processed_videos = process_video_folder(input_folder, output_folder, target_width, target_height)
-nomi_cartelle = get_folder_names(output_folder)
-train_lstm(file_csv, nomi_cartelle)
+    risultato = calcola_media_colonne(file_excel)
+
+    file_csv = './dativideo.csv'
+    with open(file_csv, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Nome Video', 'Emozione'])
+        for nome_video, etichetta in risultato:
+            if nome_video.startswith("VID_RGB_000"):
+                nome_video = nome_video.replace("VID_RGB_000", "").strip()
+            writer.writerow([nome_video, etichetta])
+            print("Nome video:", nome_video)
+            print("Emozione:", etichetta)
+            print()
+
+    print("Dati salvati correttamente nel file CSV:", file_csv)
+
+    # Esempio di utilizzo della funzione train_lstm()
+    input_folder = './videos'
+    output_folder = './outputframe'
+    target_width = 180
+    target_height = 320
+    file_csv = './dativideo.csv'
+
+    if os.path.exists("./outputframe") | os.path.exists("./logs") | os.path.exists("emotion_lstm_model.h5"):
+        print(
+            "\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
+        print(
+            "Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframe\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
+        print("Procedo alla cancellazione? [y/n]")
+        response = input()
+        if response.lower() != 'y':
+            print("\nÈ necessario che questi file vengano spostati da questa workspace per il corretto funzionamento.")
+            print("Riavvia lo script una volta che questi file siano stati spostati (o cancellati) correttamente.")
+            exit()
+        else:
+            # Cancella la cartella 'outputframe' e tutto il suo contenuto nel caso siano rimasti rimasugli da vecchie esecuzioni
+            if os.path.exists("./outputframe"):
+                shutil.rmtree('./outputframe')
+            if os.path.exists("./logs"):
+                shutil.rmtree('./logs')
+            if os.path.exists("emotion_lstm_model.h5"):
+                os.remove('emotion_lstm_model.h5')
+            print("\nCancellazione dei file avvenuta con successo.")
+            print("Esecuzione dello script in corso...")
+
+    processed_videos = process_video_folder(input_folder, output_folder, target_width, target_height)
+    nomi_cartelle = get_folder_names(output_folder)
+    train_lstm(file_csv, nomi_cartelle)
+
+
+if __name__ == '__main__':
+    main()
