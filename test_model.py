@@ -5,6 +5,8 @@ import os
 import mediapipe as mp
 import pandas as pd
 import numpy as np
+import argparse
+import shutil
 from sklearn.preprocessing import LabelEncoder
 from keras.models import load_model
 from sklearn.metrics import classification_report, confusion_matrix
@@ -144,7 +146,7 @@ def process_video_folder(input_folder, output_folder, target_width, target_heigh
     Prende in input il percorso del file CSV e una lista di nomi di cartelle.
     Non restituisce nulla, ma stampa l'accuratezza del modello sul set di test e le metriche di classificazione.
 """
-def test_lstm(file_csv, nomi_cartelle):
+def test_lstm(file_csv, nomi_cartelle,model):
     df = pd.read_csv(file_csv)
     emotions = {'-Happy': 0, '-Sad': 1, '-Angry': 2, '-Neutral': 3}
 
@@ -183,14 +185,14 @@ def test_lstm(file_csv, nomi_cartelle):
     y = np.array(y)
 
     # Load the pre-trained model
-    model = load_model('emotion_lstm_model.h5')
+    testModel = load_model(model)
 
     # Evaluate the model on the test data
-    test_loss, test_accuracy = model.evaluate(X, y)
+    test_loss, test_accuracy = testModel.evaluate(X, y)
     print("Accuratezza sul set di test: {:.2f}%".format(test_accuracy * 100))
 
     # Make predictions on the test data
-    y_pred = model.predict(X)
+    y_pred = testModel.predict(X)
     y_pred_classes = np.argmax(y_pred, axis=1)
 
     # Print classification report
@@ -212,13 +214,86 @@ def get_folder_names(output_folder):
         print('Il percorso specificato non corrisponde a una cartella.')
         return []
 
-# Esempio di utilizzo della funzione test_lstm()
-input_folder = './videosTest'
-output_folder = './outputframeTest'
-target_width = 180
-target_height = 320
-file_csv = './dativideoTest.csv'
+def main():
+    # Crea un parser per gli argomenti da riga di comando
+    parser = argparse.ArgumentParser(
+        description='Parser per definire gli argomenti da riga di comando (il file .xlsx e la cartella dei video).')
+    parser.add_argument('--video-folder', type=str, help='La cartella contenente i video da elaborare.')
+    parser.add_argument('--model', type=str, help='Modello da voler testare.')
 
-processed_videos = process_video_folder(input_folder, output_folder, target_width, target_height)
-nomi_cartelle = get_folder_names(output_folder)
-test_lstm(file_csv, nomi_cartelle)
+    # Analizza gli argomenti da riga di comando
+    args = parser.parse_args()
+
+    # Controllo se è stata fornita una cartella dei video per il test diversa tramite l'argomento --video-folder
+    if args.video_folder:
+        input_folder = args.video_folder
+    elif os.path.exists("./videosTest"):
+        print("\nStai per utilizzare il percorso di default per la cartella dei video di test: './videosTest'")
+        print("Vuoi continuare? [y/n]")
+        response = input()
+        if response.lower() != 'y':
+            print("\nPer specificare un percorso della cartella dei video di test diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
+            print("      \033[91mpython\033[0m test_model.py \033[91m--video-folder\033[0m /percorso/della/tua/cartellaDeiVideoDiTest\n")
+            exit()
+        else:
+            input_folder = './videosTest'
+            print("Continuazione dello script in corso...")
+    else:
+        print(
+            "\nÈ necessario specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
+        print("      \033[91mpython\033[0m test_model.py \033[91m--video-folder\033[0m /percorso/della/tua/cartellaDeiVideoDiTest\n")
+        print("Oppure importa una cartella 'videosTest' con all'interno i video di test di tuo interesse nella workspace corrente.")
+        exit()
+
+    # Controllo se è stata fornito un modello da testare tramite l'argomento --model
+    if args.model:
+        model=args.model
+    elif os.path.exists("emotion_lstm_model.h5"):
+        print("\nStai per utilizzare il modello corrente in locale: 'emotion_lstm_model.h5'")
+        print("Vuoi continuare? [y/n]")
+        response = input()
+        if response.lower() != 'y':
+            print(
+                "\nPer specificare un modello da testare , esegui lo script con l'opzione \033[91m--model\033[0m, come segue:")
+            print(
+                "      \033[91mpython\033[0m test_model.py \033[91m--model\033[0m /percorso/del/tuo/modello\n")
+            exit()
+        else:
+            model = 'emotion_lstm_model.h5'
+            print("Continuazione dello script in corso...")
+    else:
+        print("\nÈ necessario specificare il percorso del modello da testare, esegui lo script con l'opzione \033[91m--model\033[0m, come segue:")
+        print("      \033[91mpython\033[0m test_model.py \033[91m--model\033[0m /percorso/del/tuo/modello\n")
+        print("Oppure importa un modello con nome 'emotion_lstm_model.h5' nella workspace corrente.")
+        exit()
+
+    output_folder = './outputframeTest'
+    target_width = 180
+    target_height = 320
+    file_csv = './dativideoTest.csv'
+
+    if os.path.exists("./outputframeTest") | os.path.exists("emotion_lstm_model.h5"):
+        print("\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
+        print("Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframeTest\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
+        print("Procedo alla cancellazione? [y/n]")
+        response = input()
+        if response.lower() != 'y':
+            print("\nÈ necessario che questi file vengano spostati da questa workspace per il corretto funzionamento.")
+            print("Riavvia lo script una volta che questi file siano stati spostati (o cancellati) correttamente.")
+            exit()
+        else:
+            # Cancella la cartella 'outputframe' e tutto il suo contenuto nel caso siano rimasti rimasugli da vecchie esecuzioni
+            if os.path.exists("./outputframeTest"):
+                shutil.rmtree('./outputframeTest')
+            if os.path.exists("emotion_lstm_model.h5"):
+                os.remove('emotion_lstm_model.h5')
+            print("\nCancellazione dei file avvenuta con successo.")
+            print("Esecuzione dello script in corso...\n\n")
+
+    process_video_folder(input_folder, output_folder, target_width, target_height)
+    nomi_cartelle = get_folder_names(output_folder)
+    test_lstm(file_csv, nomi_cartelle,model)
+
+
+if __name__ == '__main__':
+    main()

@@ -291,7 +291,8 @@ def get_folder_names(output_folder):
 
 def main():
     # Crea un parser per gli argomenti da riga di comando
-    parser = argparse.ArgumentParser(description='Processa un file Excel per calcolare la media delle colonne.')
+    parser = argparse.ArgumentParser(
+        description='Parser per definire gli argomenti da riga di comando (il file .xlsx e la cartella dei video).')
     parser.add_argument('--file', type=str, help='Il percorso del file Excel da processare.')
     parser.add_argument('--video-folder', type=str, help='La cartella contenente i video da elaborare.')
 
@@ -324,18 +325,21 @@ def main():
         print("Vuoi continuare? [y/n]")
         response = input()
         if response.lower() != 'y':
-            print("\nPer specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
-            print("      \033[91mpython\033[0m test_validation_model.py \033[91m--video-folder\033[0m /percorso/del/tuo/file.xlsx\n")
+            print(
+                "\nPer specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
+            print(
+                "      \033[91mpython\033[0m test_validation_model.py \033[91m--video-folder\033[0m /percorso/della/tua/cartellaDeiVideo\n")
             exit()
         else:
             input_folder = './videos'
             print("Continuazione dello script in corso...")
     else:
-        print("\nÈ necessario specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
-        print("      \033[91mpython\033[0m test_validation_model.py \033[91m--video-folder\033[0m /percorso/del/tuo/file.xlsx\n")
+        print(
+            "\nÈ necessario specificare un percorso della cartella dei video diverso, esegui lo script con l'opzione \033[91m--video-folder\033[0m, come segue:")
+        print(
+            "      \033[91mpython\033[0m test_validation_model.py \033[91m--video-folder\033[0m /percorso/della/tua/cartellaDeiVideo\n")
         print("Oppure importa una cartella 'videos' con all'interno i video di tuo interesse nella workspace corrente.")
         exit()
-
 
     file_csv = './dativideo.csv'
     with open(file_csv, 'w', newline='') as csvfile:
@@ -351,15 +355,16 @@ def main():
 
     print("Dati salvati correttamente nel file CSV:", file_csv)
 
-    # Esempio di utilizzo della funzione train_lstm()
     output_folder = './outputframe'
     target_width = 180
     target_height = 320
     file_csv = './dativideo.csv'
 
     if os.path.exists("./outputframe") | os.path.exists("./logs") | os.path.exists("emotion_lstm_model.h5"):
-        print("\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
-        print("Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframe\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
+        print(
+            "\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
+        print(
+            "Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframe\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
         print("Procedo alla cancellazione? [y/n]")
         response = input()
         if response.lower() != 'y':
@@ -377,7 +382,7 @@ def main():
             print("\nCancellazione dei file avvenuta con successo.")
             print("Esecuzione dello script in corso...\n\n")
 
-    processed_videos = process_video_folder(input_folder, output_folder, target_width, target_height)
+    process_video_folder(input_folder, output_folder, target_width, target_height)
     nomi_cartelle = get_folder_names(output_folder)
     train_lstm(file_csv, nomi_cartelle)
 
