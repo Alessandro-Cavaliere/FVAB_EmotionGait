@@ -110,12 +110,12 @@ pip install -r requirements.txt
 Then simply run the reference python file for testing the model:
 ```
 (if you want to import in the workspace videos folder, xlsx file and model.h5)
-python test_validation_model.py  
+python test_model.py  
 
 or
 
 (if you want to use your videos folder by path, your xlsx file by path and your model.h5 by path)
-python test_validation_model.py --file /path/to/your/file.xlsx --video-folder /path/to/your/videoFolder --model /path/to/your/model
+python test_model.py --file /path/to/your/file.xlsx --video-folder /path/to/your/videoFolder --model /path/to/your/model
 ```
 Once this is done, the data and statistics of accuracy, precision and the various details of the case will be displayed on the console.
 
