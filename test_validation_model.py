@@ -8,12 +8,14 @@ import mediapipe as mp
 import pandas as pd
 import argparse
 import shutil
+import matplotlib.pyplot as plt
 from keras.models import Sequential
 from keras.regularizers import l2
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from keras.layers import TimeDistributed, Conv2D, MaxPooling2D, Flatten, LSTM, Dense, Dropout
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau, TensorBoard
+from sklearn.metrics import f1_score, confusion_matrix
+from keras.layers import TimeDistributed, Conv2D, MaxPooling2D, Flatten, LSTM, Dense
+from keras.callbacks import EarlyStopping, TensorBoard
 from sklearn.utils import compute_sample_weight
 from imblearn.over_sampling import RandomOverSampler
 from keras.optimizers import Adam
@@ -205,7 +207,11 @@ def train_lstm(file_csv, nomi_cartelle):
 
     # Ottieni il numero di timesteps e la forma di input per il modello
     timesteps = X.shape[1]
+    print("TIMESTEP:\n")
+    print(timesteps)
     input_shape = X.shape[2:]
+    print("INPUP:\n")
+    print(input_shape)
 
     # Applica l'oversampling per bilanciare le classi
     ros = RandomOverSampler(random_state=42)
@@ -214,6 +220,30 @@ def train_lstm(file_csv, nomi_cartelle):
 
     # Suddividi i dati in set di addestramento e di test
     X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)
+
+    train_label_distribution = np.bincount(y_train)
+    train_labels = np.unique(y_train)
+
+    # Calcola la distribuzione delle etichette nel set di validazione
+    val_label_distribution = np.bincount(y_test)
+    val_labels = np.unique(y_test)
+
+    # Plot della distribuzione delle etichette nel set di addestramento
+    plt.figure(figsize=(8, 5))
+    plt.bar(train_labels, train_label_distribution)
+    plt.xlabel('Etichette')
+    plt.ylabel('Numero di campioni')
+    plt.title('Distribuzione delle etichette nel set di addestramento')
+    plt.show()
+
+    # Plot della distribuzione delle etichette nel set di validazione
+    plt.figure(figsize=(8, 5))
+    plt.bar(val_labels, val_label_distribution)
+    plt.xlabel('Etichette')
+    plt.ylabel('Numero di campioni')
+    plt.title('Distribuzione delle etichette nel set di validazione')
+    plt.show()
+
 
     # Calcola i pesi delle classi per bilanciare ulteriormente le classi durante l'addestramento
     sample_weights = compute_sample_weight(class_weight='balanced', y=y_train)
@@ -246,7 +276,7 @@ def train_lstm(file_csv, nomi_cartelle):
     model.summary()
 
     # Compila il modello con un learning rate specifico
-    opt = Adam(learning_rate=0.00002)
+    opt = Adam(learning_rate=0.00007)
     model.compile(loss='sparse_categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # Crea i callback per l'addestramento
@@ -270,7 +300,29 @@ def train_lstm(file_csv, nomi_cartelle):
 
     # Salvataggio del modello addestrato
     model.save('emotion_lstm_model.h5')
-    print("Modello LSTM addestrato salvato con successo.")
+    print("Modello LSTM addestrato salvato con successo.\n")
+
+    y_pred = model.predict(X_test)
+    y_pred_classes = np.argmax(y_pred, axis=1)
+
+    f1score = f1_score(y_test, y_pred_classes, average='weighted')
+    print("F1 Score: " + str(f1score))
+
+    cm = confusion_matrix(y_test, y_pred_classes)
+    class_accuracy = cm.diagonal() / cm.sum(axis=1)
+
+    for i, accuracy in enumerate(class_accuracy):
+        emotion = le.inverse_transform([i])[0]
+        if emotion == 0:
+            print(f"Accuracy for Happy: {accuracy}")
+        elif emotion == 1:
+            print(f"Accuracy for Sad: {accuracy}")
+        elif emotion == 2:
+            print(f"Accuracy for Angry: {accuracy}")
+        elif emotion == 3:
+            print(f"Accuracy for Neutral: {accuracy}")
+        else:
+            print("Invalid emotion")
 
 
 """
@@ -373,7 +425,8 @@ def main():
         else:
             # Cancella la cartella 'outputframe' e tutto il suo contenuto nel caso siano rimasti rimasugli da vecchie esecuzioni
             if os.path.exists("./outputframe"):
-                shutil.rmtree('./outputframe')
+                print("no")
+                #shutil.rmtree('./outputframe')
             if os.path.exists("./logs"):
                 shutil.rmtree('./logs')
             if os.path.exists("emotion_lstm_model.h5"):
@@ -381,7 +434,8 @@ def main():
             print("\nCancellazione dei file avvenuta con successo.")
             print("Esecuzione dello script in corso...\n\n")
 
-    process_video_folder(input_folder, output_folder, target_width, target_height)
+    if not os.path.exists("./outputframe"):
+        process_video_folder(input_folder, output_folder, target_width, target_height)
     nomi_cartelle = get_folder_names(output_folder)
     train_lstm(file_csv, nomi_cartelle)
 

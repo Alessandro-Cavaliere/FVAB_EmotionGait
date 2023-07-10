@@ -10,7 +10,7 @@ import shutil
 from sklearn.preprocessing import LabelEncoder
 from keras.models import load_model
 from sklearn.metrics import classification_report, confusion_matrix
-
+from imblearn.over_sampling import RandomOverSampler
 """
     Funzione **calcola_media_colonne** per calcolare la media delle colonne in un file Excel.
     Prende in input il percorso del file Excel.
@@ -166,6 +166,7 @@ def test_lstm(file_csv, nomi_cartelle, model):
 
     # Iterazione sui nomi delle cartelle
     for folder_name in nomi_cartelle:
+        print(nomi_cartelle)
         video_name = " " + folder_name  # Nome della cartella video
 
         if video_name in df['Nome Video'].values:
@@ -177,7 +178,8 @@ def test_lstm(file_csv, nomi_cartelle, model):
             folder_path = os.path.abspath("outputframeTest\\" + folder_name)
             framesInVideoDir = os.listdir(folder_path)
             framesInVideoDirSorted = sorted(framesInVideoDir, key=lambda x: int(''.join(filter(str.isdigit, x))))
-
+            print("What")
+            print(framesInVideoDirSorted)
             for frame_file in framesInVideoDirSorted:
                 frame_path = os.path.join(folder_path, frame_file)
                 frame = cv2.imread(frame_path)
@@ -185,6 +187,7 @@ def test_lstm(file_csv, nomi_cartelle, model):
                 frame_array.append(frame)
 
             X.append(frame_array)  # Aggiungi l'array dei frame con landmarks
+            print(emotion_label)
             y.append(emotion_label)
 
     print(y)
@@ -194,22 +197,33 @@ def test_lstm(file_csv, nomi_cartelle, model):
 
     X = np.array(X)
     y = np.array(y)
+    print(X.shape)
+    # Ottieni il numero di timesteps e la forma di input per il modello
+    timesteps = X.shape[1]
+    print("TIMESTEP:\n")
+    print(timesteps)
+    input_shape = X.shape[2:]
+    print("INPUP:\n")
+    print(input_shape)
 
-    # Load the pre-trained model
+    X_res = X.reshape(len(X), -1)
+    X_res = X_res.reshape(-1, timesteps, input_shape[0], input_shape[1], input_shape[2])
+
+    # Carica il modello pre-addestrato
     testModel = load_model(model)
 
-    # Evaluate the model on the test data
-    test_loss, test_accuracy = testModel.evaluate(X, y)
+    # Valuta il modello sui dati
+    test_loss, test_accuracy = testModel.evaluate(X_res, y)
     print("Accuratezza sul set di test: {:.2f}%".format(test_accuracy * 100))
 
-    # Make predictions on the test data
+    # Effettua le previsioni sui dati
     y_pred = testModel.predict(X)
     y_pred_classes = np.argmax(y_pred, axis=1)
 
-    # Print classification report
-    print(classification_report(y, y_pred_classes, target_names=emotions.keys()))
+    # Stampa il report di classificazione
+    print(classification_report(y, y_pred_classes, zero_division=0, target_names=emotions.keys()))
 
-    # Print confusion matrix
+    # Stampa la matrice di confusione
     print(confusion_matrix(y, y_pred_classes))
 
 
@@ -326,7 +340,7 @@ def main():
         print(
             "\nSiccome esistono rimasugli di vecchie esecuzioni dello script, è necessario cancellarle per assicurarsi che l'esecuzione avvenga senza intoppi.")
         print(
-            "Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframeTest\033[0m - \033[91m./logs\033[0m -\033[91memotion_lstm_model.h5\033[0m)")
+            "Assicurati che questi file sensibili non ti siano utili (\033[91m./outputframeTest\033[0m - \033[91m./logs\033[0m - \033[91memotion_lstm_model.h5\033[0m)")
         print("Procedo alla cancellazione? [y/n]")
         response = input()
         if response.lower() != 'y':
@@ -340,7 +354,8 @@ def main():
             if os.path.exists("./logs"):
                 shutil.rmtree('./logs')
             if os.path.exists("emotion_lstm_model.h5"):
-                os.remove('emotion_lstm_model.h5')
+                print("")
+               # os.remove('emotion_lstm_model.h5')
             print("\nCancellazione dei file avvenuta con successo.")
             print("Esecuzione dello script in corso...\n\n")
 
