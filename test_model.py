@@ -179,7 +179,7 @@ def test_lstm(file_csv, nomi_cartelle, model):
             framesInVideoDir = os.listdir(folder_path)
             framesInVideoDirSorted = sorted(framesInVideoDir, key=lambda x: int(''.join(filter(str.isdigit, x))))
             print("What")
-            print(framesInVideoDirSorted)
+            print(len(framesInVideoDirSorted))
             for frame_file in framesInVideoDirSorted:
                 frame_path = os.path.join(folder_path, frame_file)
                 frame = cv2.imread(frame_path)
@@ -187,6 +187,9 @@ def test_lstm(file_csv, nomi_cartelle, model):
                 frame_array.append(frame)
 
             X.append(frame_array)  # Aggiungi l'array dei frame con landmarks
+            z=np.array(X)
+            print(video_name)
+            print(z.shape[1])
             print(emotion_label)
             y.append(emotion_label)
 
@@ -197,7 +200,7 @@ def test_lstm(file_csv, nomi_cartelle, model):
 
     X = np.array(X)
     y = np.array(y)
-    print(X.shape)
+    print(X.shape[1])
     # Ottieni il numero di timesteps e la forma di input per il modello
     timesteps = X.shape[1]
     print("TIMESTEP:\n")
@@ -208,7 +211,9 @@ def test_lstm(file_csv, nomi_cartelle, model):
 
     X_res = X.reshape(len(X), -1)
     X_res = X_res.reshape(-1, timesteps, input_shape[0], input_shape[1], input_shape[2])
-
+    print("X_res")
+    print(len(X))
+    print(len(X_res))
     # Carica il modello pre-addestrato
     testModel = load_model(model)
 

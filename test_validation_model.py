@@ -14,11 +14,11 @@ from keras.regularizers import l2
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import f1_score, confusion_matrix
-from keras.layers import TimeDistributed, Conv2D, MaxPooling2D, Flatten, LSTM, Dense
-from keras.callbacks import EarlyStopping, TensorBoard
+from keras.layers import TimeDistributed, Conv2D, MaxPooling2D, Flatten, LSTM, Dense, BatchNormalization
+from keras.callbacks import EarlyStopping, TensorBoard, ReduceLROnPlateau
 from sklearn.utils import compute_sample_weight
 from imblearn.over_sampling import RandomOverSampler
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 
 """
     Funzione **calcola_media_colonne** per calcolare la media delle colonne in un file Excel.
@@ -205,6 +205,12 @@ def train_lstm(file_csv, nomi_cartelle):
     X = np.array(X)
     y = np.array(y)
 
+    # Suddividi i dati in set di addestramento e di test
+    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+
+
+
     # Ottieni il numero di timesteps e la forma di input per il modello
     timesteps = X.shape[1]
     print("TIMESTEP:\n")
@@ -217,9 +223,32 @@ def train_lstm(file_csv, nomi_cartelle):
     ros = RandomOverSampler(random_state=42)
     X_res, y_res = ros.fit_resample(X.reshape(len(X), -1), y)
     X_res = X_res.reshape(-1, timesteps, input_shape[0], input_shape[1], input_shape[2])
+    print("Lunghezza di X_res:", len(X_res))
+    print("Lunghezza di y_res:", len(y_res))
+    index = [45, 20, 18, 42,  16, 35, 23, 48, 31, 28, 9, 53, 37, 29, 13, 32, 61]
+    all_index_res = np.arange(len(X_res))
+    train_index_res = np.setdiff1d(all_index_res, index)
 
-    # Suddividi i dati in set di addestramento e di test
-    X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)
+    print(all_index_res)
+    print(train_index_res)
+    emotions = y_res[train_index_res]
+    print(emotions)
+    # Decodificare le etichette delle emozioni
+    emozioni_corrispondenti = le.inverse_transform(emotions)
+    print(emozioni_corrispondenti)
+
+    # Stampa delle emozioni corrispondenti ai video aggiuntivi
+    for i, emozione in zip(train_index_res, emozioni_corrispondenti):
+        print(f"Video aggiuntivo {i} - Emozione: {emozione}")
+
+    X_train = X_res[train_index_res]
+    X_test = X_res[index]
+    y_train = y_res[train_index_res]
+    y_test = y_res[index]
+    print("Lunghezza di X_train:", len(X_train))
+    print("Lunghezza di X_test:", len(X_test))
+    print("Lunghezza di y_train:", len(y_train))
+    print("Lunghezza di y_test:", len(y_test))
 
     train_label_distribution = np.bincount(y_train)
     train_labels = np.unique(y_train)
@@ -244,9 +273,8 @@ def train_lstm(file_csv, nomi_cartelle):
     plt.title('Distribuzione delle etichette nel set di validazione')
     plt.show()
 
-
     # Calcola i pesi delle classi per bilanciare ulteriormente le classi durante l'addestramento
-    sample_weights = compute_sample_weight(class_weight='balanced', y=y_train)
+    sample_weights = compute_sample_weight(class_weight='balanced', y=y_res)
 
     """
         Crea il modello LSTM:
@@ -263,31 +291,32 @@ def train_lstm(file_csv, nomi_cartelle):
            La funzione di attivazione softmax garantisce che l'output possa essere interpretato come probabilità per ciascuna classe.
     """
     model = Sequential()
-    model.add(TimeDistributed(Conv2D(16, (3, 3), activation="relu"), input_shape=(timesteps,) + input_shape))
+    model.add(TimeDistributed(Conv2D(32, (3, 3), activation="relu"), input_shape=(timesteps,) + input_shape))
+    model.add(TimeDistributed(BatchNormalization()))
     model.add(TimeDistributed(MaxPooling2D((2, 2))))
     model.add(TimeDistributed(Conv2D(32, (3, 3), activation="relu")))
     model.add(TimeDistributed(MaxPooling2D((2, 2))))
     model.add(TimeDistributed(Flatten()))
-    model.add(LSTM(32, return_sequences=False))
-    model.add(Dense(32, activation='relu', kernel_regularizer=l2(0.001)))
+    model.add(LSTM(32, return_sequences=False, activation='tanh'))
+    model.add(Dense(32, activation='relu', kernel_regularizer=l2(0.0001)))
     model.add(Dense(len(np.unique(y)), activation="softmax"))
 
     # Stampa un sommario del modello
     model.summary()
 
     # Compila il modello con un learning rate specifico
-    opt = Adam(learning_rate=0.00007)
+    opt = RMSprop(learning_rate=0.001)
     model.compile(loss='sparse_categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # Crea i callback per l'addestramento
     early_stopping = EarlyStopping(monitor='val_accuracy', patience=20)
-    # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001)  # Nuovo callback
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001)  # Nuovo callback
     tensorboard_callback = TensorBoard(log_dir='./logs', histogram_freq=1)
 
     # Addestra il modello --> Inizio addestramento
     print("Inizio addestramento del modello LSTM...")
-    history = model.fit(X_train, y_train, batch_size=32, epochs=150, validation_data=(X_test, y_test),
-                        callbacks=[early_stopping, tensorboard_callback],
+    history = model.fit(X_res, y_res, batch_size=32, epochs=150, validation_data=(X_test, y_test),
+                        callbacks=[early_stopping, tensorboard_callback,reduce_lr],
                         sample_weight=sample_weights)
 
     # Stampa l'accuratezza del modello sul set di addestramento
@@ -426,7 +455,7 @@ def main():
             # Cancella la cartella 'outputframe' e tutto il suo contenuto nel caso siano rimasti rimasugli da vecchie esecuzioni
             if os.path.exists("./outputframe"):
                 print("no")
-                #shutil.rmtree('./outputframe')
+                # shutil.rmtree('./outputframe')
             if os.path.exists("./logs"):
                 shutil.rmtree('./logs')
             if os.path.exists("emotion_lstm_model.h5"):
