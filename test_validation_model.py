@@ -205,12 +205,6 @@ def train_lstm(file_csv, nomi_cartelle):
     X = np.array(X)
     y = np.array(y)
 
-    # Suddividi i dati in set di addestramento e di test
-    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-
-
-
     # Ottieni il numero di timesteps e la forma di input per il modello
     timesteps = X.shape[1]
     print("TIMESTEP:\n")
@@ -225,22 +219,15 @@ def train_lstm(file_csv, nomi_cartelle):
     X_res = X_res.reshape(-1, timesteps, input_shape[0], input_shape[1], input_shape[2])
     print("Lunghezza di X_res:", len(X_res))
     print("Lunghezza di y_res:", len(y_res))
+
     index = [45, 20, 18, 42,  16, 35, 23, 48, 31, 28, 9, 53, 37, 29, 13, 32, 61]
     all_index_res = np.arange(len(X_res))
     train_index_res = np.setdiff1d(all_index_res, index)
 
     print(all_index_res)
     print(train_index_res)
-    emotions = y_res[train_index_res]
-    print(emotions)
-    # Decodificare le etichette delle emozioni
-    emozioni_corrispondenti = le.inverse_transform(emotions)
-    print(emozioni_corrispondenti)
 
-    # Stampa delle emozioni corrispondenti ai video aggiuntivi
-    for i, emozione in zip(train_index_res, emozioni_corrispondenti):
-        print(f"Video aggiuntivo {i} - Emozione: {emozione}")
-
+    # Suddividi i dati in set di addestramento e di test
     X_train = X_res[train_index_res]
     X_test = X_res[index]
     y_train = y_res[train_index_res]
@@ -278,16 +265,17 @@ def train_lstm(file_csv, nomi_cartelle):
 
     """
         Crea il modello LSTM:
-        1. Aggiungi un livello di convoluzione 2D con 16 filtri, una dimensione del kernel di 3x3 e una funzione di attivazione ReLU.
-           Il livello TimeDistributed permette di applicare la convoluzione a ciascuno dei timesteps indipendentemente.
-        2. Aggiungi un livello di pooling per ridurre la dimensione spaziale dell'output del livello precedente.
-        3. Aggiungi un altro livello di convoluzione 2D, questa volta con 32 filtri.
-        4. Aggiungi un altro livello di pooling.
-        5. Appiattisci l'output del livello precedente per poterlo passare a un livello LSTM.
-        6. Aggiungi un livello LSTM con 32 unità. Questo livello analizza le sequenze di output del livello precedente nel tempo.
-        7. Aggiungi un livello completamente connesso (Dense) con 32 unità e una funzione di attivazione ReLU.
-           Il regularizzatore l2 aiuta a prevenire l'overfitting penalizzando i pesi grandi.
-        8. Aggiungi un livello di output completamente connesso con un numero di unità pari al numero di classi uniche in y.
+        1. Aggiungi un livello TimeDistributed di convoluzione 2D con 32 filtri, una dimensione del kernel di 3x3 e una funzione di attivazione ReLU.
+           Questo livello applica la convoluzione a ciascuno dei timesteps indipendentemente.
+        2. Aggiungi un livello TimeDistributed di BatchNormalization per normalizzare gli output del livello di convoluzione.
+        3. Aggiungi un livello TimeDistributed di MaxPooling2D per ridurre la dimensione spaziale dell'output del livello precedente.
+        4. Aggiungi un altro livello TimeDistributed di convoluzione 2D con 32 filtri e una dimensione del kernel di 3x3.
+        5. Aggiungi un altro livello TimeDistributed di MaxPooling2D.
+        6. Appiattisci l'output del livello precedente per poterlo passare a un livello LSTM.
+        7. Aggiungi un livello LSTM con 32 unità. Questo livello analizza le sequenze di output del livello precedente nel tempo.
+        8. Aggiungi un livello completamente connesso (Dense) con 32 unità e una funzione di attivazione ReLU.
+           Il regularizzatore l2 con un valore di 0.0001 aiuta a prevenire l'overfitting penalizzando i pesi grandi.
+        9. Aggiungi un livello di output completamente connesso con un numero di unità pari al numero di classi uniche presenti in y.
            La funzione di attivazione softmax garantisce che l'output possa essere interpretato come probabilità per ciascuna classe.
     """
     model = Sequential()
@@ -325,7 +313,7 @@ def train_lstm(file_csv, nomi_cartelle):
 
     # Valuta il modello sul set di test e stampa l'accuratezza
     test_loss, test_accuracy = model.evaluate(X_test, y_test)
-    print("Accuratezza sul set di test: {:.2f}%".format(test_accuracy * 100))
+    print("Accuratezza sul set di validazione: {:.2f}%".format(test_accuracy * 100))
 
     # Salvataggio del modello addestrato
     model.save('emotion_lstm_model.h5')
@@ -454,8 +442,7 @@ def main():
         else:
             # Cancella la cartella 'outputframe' e tutto il suo contenuto nel caso siano rimasti rimasugli da vecchie esecuzioni
             if os.path.exists("./outputframe"):
-                print("no")
-                # shutil.rmtree('./outputframe')
+                shutil.rmtree('./outputframe')
             if os.path.exists("./logs"):
                 shutil.rmtree('./logs')
             if os.path.exists("emotion_lstm_model.h5"):

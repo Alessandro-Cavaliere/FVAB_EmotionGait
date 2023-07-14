@@ -56,17 +56,30 @@ The main steps involved in the project are:
 
 ## Model Architecture
 
-The model architecture is as follows:
+## Model Architecture
 
-- `TimeDistributed Conv2D` layer with 16 filters and a 3x3 kernel, followed by a ReLU activation function.
-- `TimeDistributed MaxPooling2D` layer with a 2x2 pool size.
-- `TimeDistributed Conv2D` layer with 32 filters and a 3x3 kernel, followed by a ReLU activation function.
-- `TimeDistributed MaxPooling2D` layer with a 2x2 pool size.
-- `TimeDistributed Flatten` layer to flatten the 3D outputs of the previous layer for the LSTM. LSTM layer with 32 units.
-- `Dense layer` with 32 units, a ReLU activation function, and L2 regularization.
-- `Output Dense layer` with a softmax activation function.
+The model architecture for the LSTM network is as follows:
 
-The model uses the `Adam` optimizer with a learning rate of 0.00002 and sparse categorical crossentropy as the loss function.
+1. A `TimeDistributed Conv2D` layer with 32 filters, a kernel size of 3x3, and ReLU activation. This layer applies convolution independently to each timestep.
+2. A `TimeDistributed BatchNormalization` layer to normalize the outputs of the convolutional layer.
+3. A `TimeDistributed MaxPooling2D` layer with a pool size of 2x2 to reduce the spatial dimensions of the previous layer's output.
+4. Another `TimeDistributed Conv2D` layer with 32 filters and a kernel size of 3x3, followed by ReLU activation.
+5. Another `TimeDistributed MaxPooling2D` layer with a pool size of 2x2.
+6. A `TimeDistributed Flatten` layer to flatten the output of the previous layer, preparing it for the LSTM layer.
+7. An LSTM layer with 32 units. This layer analyzes the temporal sequences of the previous layer's outputs.
+8. A fully connected `Dense` layer with 32 units and ReLU activation. It includes L2 regularization with a value of 0.0001 to prevent overfitting by penalizing large weights.
+9. An output `Dense` layer that is fully connected with a number of units equal to the number of unique classes in the target variable (`y`). The softmax activation ensures that the output can be interpreted as probabilities for each class.
+
+The model uses the `RMSprop` optimizer with a learning rate of 0.001. The loss function used is `sparse_categorical_crossentropy`, suitable for multi-class classification tasks with integer labels.
+
+During training, several callbacks are employed:
+- `EarlyStopping` monitors the validation accuracy and stops training if it does not improve for 20 epochs.
+- `ReduceLROnPlateau` reduces the learning rate by a factor of 0.2 if the validation loss does not improve for 5 epochs.
+- `TensorBoard` logs training information for visualization.
+
+After training, the model is saved as `emotion_lstm_model.h5`. The model's accuracy on the training set and validation set, as well as the F1 score and accuracy for each emotion category on the testing set, are printed.
+
+Feel free to modify the code and adjust the hyperparameters according to your needs. Happy modeling!
 
 ## Results
 
