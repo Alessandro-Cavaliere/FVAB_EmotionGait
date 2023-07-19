@@ -359,8 +359,7 @@ def main():
             if os.path.exists("./logs"):
                 shutil.rmtree('./logs')
             if os.path.exists("emotion_lstm_model.h5"):
-                print("")
-               # os.remove('emotion_lstm_model.h5')
+                os.remove('emotion_lstm_model.h5')
             print("\nCancellazione dei file avvenuta con successo.")
             print("Esecuzione dello script in corso...\n\n")
 

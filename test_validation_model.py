@@ -201,6 +201,9 @@ def train_lstm(file_csv, nomi_cartelle):
     le = LabelEncoder()
     y = le.fit_transform(y)
 
+    # Suddividi i dati in set di addestramento e di test
+    Z_t, Z_te, y_t, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
+
     # Trasforma le liste X e y in array numpy
     X = np.array(X)
     y = np.array(y)
@@ -220,7 +223,7 @@ def train_lstm(file_csv, nomi_cartelle):
     print("Lunghezza di X_res:", len(X_res))
     print("Lunghezza di y_res:", len(y_res))
 
-    index = [45, 20, 18, 42,  16, 35, 23, 48, 31, 28, 9, 53, 37, 29, 13, 32, 61]
+    index = [20, 18, 42,  16, 35, 23, 9, 4, 11, 48, 31, 28, 53, 37, 38, 29, 13, 32, 24, 33]
     all_index_res = np.arange(len(X_res))
     train_index_res = np.setdiff1d(all_index_res, index)
 
@@ -229,9 +232,9 @@ def train_lstm(file_csv, nomi_cartelle):
 
     # Suddividi i dati in set di addestramento e di test
     X_train = X_res[train_index_res]
-    X_test = X_res[index]
+    X_test = X[index]
     y_train = y_res[train_index_res]
-    y_test = y_res[index]
+    y_test = y[index]
     print("Lunghezza di X_train:", len(X_train))
     print("Lunghezza di X_test:", len(X_test))
     print("Lunghezza di y_train:", len(y_train))
@@ -241,8 +244,8 @@ def train_lstm(file_csv, nomi_cartelle):
     train_labels = np.unique(y_train)
 
     # Calcola la distribuzione delle etichette nel set di validazione
-    val_label_distribution = np.bincount(y_test)
-    val_labels = np.unique(y_test)
+    val_label_distribution = np.bincount(y_te)
+    val_labels = np.unique(y_te)
 
     # Plot della distribuzione delle etichette nel set di addestramento
     plt.figure(figsize=(8, 5))
@@ -285,8 +288,8 @@ def train_lstm(file_csv, nomi_cartelle):
     model.add(TimeDistributed(Conv2D(32, (3, 3), activation="relu")))
     model.add(TimeDistributed(MaxPooling2D((2, 2))))
     model.add(TimeDistributed(Flatten()))
-    model.add(LSTM(32, return_sequences=False, activation='tanh'))
-    model.add(Dense(32, activation='relu', kernel_regularizer=l2(0.0001)))
+    model.add(LSTM(32, return_sequences=False))
+    model.add(Dense(32, activation='relu', kernel_regularizer=l2(0.001)))
     model.add(Dense(len(np.unique(y)), activation="softmax"))
 
     # Stampa un sommario del modello
@@ -297,13 +300,13 @@ def train_lstm(file_csv, nomi_cartelle):
     model.compile(loss='sparse_categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
     # Crea i callback per l'addestramento
-    early_stopping = EarlyStopping(monitor='val_accuracy', patience=20)
+    early_stopping = EarlyStopping(monitor='val_accuracy', patience=10)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001)  # Nuovo callback
     tensorboard_callback = TensorBoard(log_dir='./logs', histogram_freq=1)
 
     # Addestra il modello --> Inizio addestramento
     print("Inizio addestramento del modello LSTM...")
-    history = model.fit(X_res, y_res, batch_size=32, epochs=150, validation_data=(X_test, y_test),
+    history = model.fit(X_res, y_res, batch_size=64, epochs=150, validation_data=(X_test, y_test),
                         callbacks=[early_stopping, tensorboard_callback,reduce_lr],
                         sample_weight=sample_weights)
 
