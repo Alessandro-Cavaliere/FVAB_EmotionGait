@@ -15,7 +15,7 @@ Table of contens
 * [Future Work](#future-work)
 * [Setup and Usage](#setup-and-usage)
 
-Project for the exam of Fundamentals of Computer Vision and Biometrics in the first year of the master's degree in CyberSecurity.This project is an exploration of using Long Short-Term Memory (LSTM) networks for emotion recognition. The goal is to classify emotions based on video data, specifically focusing on facial expressions. 
+Project for the exam of Fundamentals of Computer Vision and Biometrics in the first year of the master's degree in CyberSecurity.
 This project is an exploration of the use of `Long Short-Term Memory (LSTM)` networks for emotion recognition. The goal is to classify emotions based on video data, particularly focusing on poses and the way people in the videos move.
 The emotions we are trying to classify include happiness, sadness, anger, and neutral.
  
